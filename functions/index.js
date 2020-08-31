@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 const Sentry = require('@sentry/node');
-// Sentry.init({ dsn: 'https://ea59a4c624de44f79e07c8a2001fea40@o362766.ingest.sentry.io/5196753' });
+ Sentry.init({ dsn: 'https://ea59a4c624de44f79e07c8a2001fea40@o362766.ingest.sentry.io/5196753' });
 
 // const express = require('express');
 // const app = express();
@@ -26,19 +26,21 @@ let url = "smtps://deliverysamasapp%40gmail.com:"+encodeURIComponent('csztmuznaq
 let transporter = nodemailer.createTransport(url);
 
 // exports.enviarEmail = functions.https.onRequest((req, res) => {
-exports.EnviandoEmail = functions.firestore.document('/solicitacao/{pushId}').onUpdate((snapshot, context) => {
+exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').onUpdate((snapshot, context) => {
         // cors(req, res, () => {
-           let remetente = '"Kleber" <dev.kleber@gmail.com>';
-           let assunto = 'assunto teste'
-            let destinatarios = 'klebers@alunos.utfpr.edu.br, dev.kleber@gmail.com'
+           //let remetente = '"Kleber" <dev.kleber@gmail.com>';
+            let remetente = snapshot.data().usuario.email;
+           let assunto = 'Movimentação de equipamento';
+            let destinatarios = snapshot.data().usuario.email+',dev.kleber@sanepar.com.br';
             let corpo = 'corpo teste';
-           let corpoHtml = 'corpo html';
-
-            // let assunto = req.body['assunto teste'];
-            // let destinatarios = req.body['dev.kleber@gmail.com']; // lista de e-mails destinatarios separados por ,
-            // let corpo = req.body['corpo do e-mail'];
-            // let corpoHtml = req.body['corpoHtml do e-mail'];
-
+            let corpoHtml =  snapshot.data().informacoes.identificação + 
+                "<br>Retirado para " + 
+                snapshot.data().informacoes.gerencia + " " +
+                snapshot.data().informacoes.localidade + " " +
+                snapshot.data().informacoes.unidade + 
+                " por " + snapshot.data().informacoes.resposavel
+                "<br>\n" +
+                "<br>Enviado automáticamente através do sistema https://ssegemsd.web.app";
 
 
             let email = {
@@ -47,10 +49,10 @@ exports.EnviandoEmail = functions.firestore.document('/solicitacao/{pushId}').on
                 subject: assunto,
                 text: corpo,
                 html: corpoHtml,
-                attachments: [{ // Basta incluir esta chave e listar os anexos
-                    filename: 'teste.pdf', // O nome que aparecerá nos anexos
-                    path: 'https://firebasestorage.googleapis.com/v0/b/sse-eletromecanica.appspot.com/o/ASE.pdf?alt=media&token=19c3a7b2-f4ed-4669-97ca-5af9267519d0' // O arquivo será lido neste local ao ser enviado
-                }]
+                //attachments: [{ // Basta incluir esta chave e listar os anexos
+               //     filename: 'teste.pdf', // O nome que aparecerá nos anexos
+             //       path: 'https://firebasestorage.googleapis.com/v0/b/sse-eletromecanica.appspot.com/o/ASE.pdf?alt=media&token=19c3a7b2-f4ed-4669-97ca-5af9267519d0' // O arquivo será lido neste local ao ser enviado
+             //   }]
             };
 
             transporter.sendMail(email, (error, info) => {

@@ -15,6 +15,8 @@ sempre atualizar com esse código as dependencias
    npm i firebase-functions@latest firebase-admin@latest --save
    (latest: ultima versão)
 
+upgrade node - https://www.npmjs.com/package/node/v/10.18.0
+npm --save  i node@10.18.0
 
 ## Git
 

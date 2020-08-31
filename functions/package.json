@@ -10,16 +10,17 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "8"
+    "node": "10"
   },
   "dependencies": {
-    "@sentry/node": "^5.21.1",
+    "@sentry/node": "^5.22.3",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "firebase-admin": "^8.13.0",
-    "firebase-functions": "^3.9.1",
+    "firebase-functions": "^3.11.0",
     "https": "^1.0.0",
     "image-to-base64": "^2.1.1",
+    "node": "^10.18.0",
     "nodemailer": "^6.4.11"
   },
   "devDependencies": {

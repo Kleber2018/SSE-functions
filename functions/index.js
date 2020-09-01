@@ -22,24 +22,25 @@ const db = admin.firestore();
 
 
 
-let url = "smtps://deliverysamasapp%40gmail.com:"+encodeURIComponent('csztmuznaqymzyis') + "@smtp.gmail.com:465";
+let url = "smtps://kleber.santos%40gmail.com:"+encodeURIComponent('') + "@smtp.gmail.com:465";
 let transporter = nodemailer.createTransport(url);
 
 // exports.enviarEmail = functions.https.onRequest((req, res) => {
-exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').onUpdate((snapshot, context) => {
+exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').onCreate((snapshot, context) => {
         // cors(req, res, () => {
            //let remetente = '"Kleber" <dev.kleber@gmail.com>';
+
             let remetente = snapshot.data().usuario.email;
            let assunto = 'Movimentação de equipamento';
-            let destinatarios = snapshot.data().usuario.email+',dev.kleber@sanepar.com.br';
+            let destinatarios = snapshot.data().usuario.email+',kleber.santos@sanepar.com.br';
             let corpo = 'corpo teste';
             let corpoHtml =  snapshot.data().informacoes.identificação + 
                 "<br>Retirado para " + 
                 snapshot.data().informacoes.gerencia + " " +
                 snapshot.data().informacoes.localidade + " " +
                 snapshot.data().informacoes.unidade + 
-                " por " + snapshot.data().informacoes.resposavel
-                "<br>\n" +
+                " por " + snapshot.data().informacoes.resposavel +
+                "<br>" +
                 "<br>Enviado automáticamente através do sistema https://ssegemsd.web.app";
 
 
@@ -54,10 +55,11 @@ exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').o
              //       path: 'https://firebasestorage.googleapis.com/v0/b/sse-eletromecanica.appspot.com/o/ASE.pdf?alt=media&token=19c3a7b2-f4ed-4669-97ca-5af9267519d0' // O arquivo será lido neste local ao ser enviado
              //   }]
             };
-
+            console.log('email sendo enviado', email);
             transporter.sendMail(email, (error, info) => {
                 if (error) {
-                    return console.log(error);
+                    console.log(error)
+                    //return error;
                 }
                 console.log('Mensagem %s enviada: %s', info.messageId, info.response);
             });
@@ -73,6 +75,7 @@ exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').o
 // função chamada para buscar no bd as imagens e baixar como Base64 para utilizar no pdfMaker
 
 const imageToBase64 = require('image-to-base64');
+const { Console } = require('console');
 
 exports.solicitacaoImgBase64 = functions.https.onCall(async (data, context) => {
     // console.log('context1111111114:', context.rawRequest.ip);

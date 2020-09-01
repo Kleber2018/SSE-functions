@@ -22,7 +22,7 @@ const db = admin.firestore();
 
 
 
-let url = "smtps://kleber.santos%40gmail.com:"+encodeURIComponent('') + "@smtp.gmail.com:465";
+let url = "smtps://kleber.santos%40sanepar.com.br:"+encodeURIComponent('') + "@smtp.gmail.com:465";
 let transporter = nodemailer.createTransport(url);
 
 // exports.enviarEmail = functions.https.onRequest((req, res) => {
@@ -34,14 +34,15 @@ exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').o
            let assunto = 'Movimentação de equipamento';
             let destinatarios = snapshot.data().usuario.email+',kleber.santos@sanepar.com.br';
             let corpo = 'corpo teste';
-            let corpoHtml =  snapshot.data().informacoes.identificação + 
-                "<br>Retirado para " + 
+            let corpoHtml =  snapshot.data().informacoes.identificacao + 
+                "<br>RETIRADO PARA " + 
                 snapshot.data().informacoes.gerencia + " " +
                 snapshot.data().informacoes.localidade + " " +
-                snapshot.data().informacoes.unidade + 
-                " por " + snapshot.data().informacoes.resposavel +
-                "<br>" +
-                "<br>Enviado automáticamente através do sistema https://ssegemsd.web.app";
+                snapshot.data().informacoes.unidade + " " +
+                snapshot.data().informacoes.ponto + 
+                " POR " + snapshot.data().informacoes.responsavel +
+                " - OBS: " + snapshot.data().informacoes.obs +
+                "<br><br>Enviado automáticamente através do sistema https://ssegemsd.web.app";
 
 
             let email = {

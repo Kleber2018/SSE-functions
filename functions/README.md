@@ -49,3 +49,5 @@ gravar horario online e offline: https://github.com/firebase/functions-samples/b
 
 alterando array
 https://medium.com/@thilanka.nuwan89/cloud-firestore-updating-object-arrays-be6ded13e76f
+
+

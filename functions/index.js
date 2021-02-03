@@ -68,6 +68,135 @@ exports.EnviandoEmail = functions.firestore.document('/movimentacao/{pushId}').o
 });
 
 
+var _ = require('lodash');
+  //https://qastack.com.br/programming/31683075/how-to-do-a-deep-comparison-between-2-objects-with-lodash
+  //https://www.npmjs.com/package/lodash
+
+ exports.AtualizaRme = functions.firestore.document('/rme/{pushId}').onUpdate((change, context) => {
+
+    var RMEbefore = change.before.data()
+    var RMEafter = change.after.data()
+    var userAutenticado = context.aut
+
+    console.log('depois: ', RMEafter)
+    console.log('separando ooooooooooooooo: ', RMEafter.SERVICO)
+    console.log('usuario ', userAutenticado)
+
+
+   let differences = function (newObj, oldObj) {
+        return _.reduce(newObj, function (result, value, key) {
+        if (!_.isEqual(value, oldObj[key])) {
+            //console.log(value, Array.isArray(value))
+            if (_.isArray(value)) {
+            result[key] = []
+            _.forEach(value, function (innerObjFrom1, index) {
+                if (_.isNil(oldObj[key][index])) {
+                result[key].push(innerObjFrom1)
+                } else {
+                let changes = differences(innerObjFrom1, oldObj[key][index])
+                if (!_.isEmpty(changes)) {
+                    result[key].push(changes)
+                }
+                }
+            })
+            } else if (Array.isArray(value)) { //(_.isObject(value)) {
+            result[key] = differences(value, oldObj[key])
+            } else {
+            result[key] = value
+            }
+        }
+        return result
+        }, {})
+    }
+
+
+
+    //  console.log(antes.chave1.prop1_3, depois.chave1.prop1_3)
+  var antes = differences(RMEbefore, RMEafter);
+  var depois = differences(RMEafter, RMEbefore);
+  console.log('antes', antes);
+  console.log('depois', depois);
+
+  var log = 'Alterado: '
+
+  if(depois.solicitante){
+    log = log+antes.solicitante+'->'+depois.solicitante+', '
+  }
+  if(depois.status){
+    log = log+antes.status+'->'+depois.status+', '
+  }
+  if(depois.OSE){
+    if(antes.OSE.localidade){
+      log = log+antes.OSE.localidade+'->'+depois.OSE.localidade+', '
+    }
+    if(depois.OSE.unidade){
+      log = log+antes.OSE.unidade+'->'+depois.OSE.unidade+', '
+    }
+    if(depois.OSE.ponto){
+      log = log+antes.OSE.ponto+'->'+depois.OSE.ponto+', '
+    }
+  }
+  if(depois.EQUIPAMENTO){
+    if(depois.EQUIPAMENTO.descricao){
+      log = log+antes.EQUIPAMENTO.descricao+'->'+depois.EQUIPAMENTO.descricao+', '
+    }
+    if(depois.EQUIPAMENTO.identificacao){
+      log = log+antes.EQUIPAMENTO.identificacao+'->'+depois.EQUIPAMENTO.identificacao+', '
+    }
+  }
+  if(depois.SERVICO){
+    if(depois.SERVICO.justificativa){
+      log = log+antes.SERVICO.justificativa+'->'+depois.SERVICO.justificativa+', '
+    }
+    if(depois.SERVICO.consequencia){
+      log = log+antes.SERVICO.consequencia+'->'+depois.SERVICO.consequencia+', '
+    }
+  }
+  if(depois.MATERIAL){
+    if(Array.isArray(depois.MATERIAL)){
+      log = log+' Materiais: '
+      depois.MATERIAL.forEach(v => {
+        if(v.cod){
+          log= log+v.cod+'-'
+        }
+        if(v.descricao){
+          log= log+v.descricao+'-'
+        }
+        if(v.categoria){
+          log= log+v.categoria+'-'
+        }
+        if(v.requisitado){
+          log= log+v.requisitado+'-'
+        }
+        if(v.comprado){
+          log= log+v.comprado+'-'
+        }
+        if(v.devolvido){
+          log= log+v.aplicado+'-'
+        }
+        if(v.uf){
+          log= log+v.uf+'-'
+        }
+
+        log = log+' | '
+      })
+    }
+    if(depois.SERVICO){
+      if(depois.SERVICO.justificativa){
+        log = log+antes.SERVICO.justificativa+'->'+depois.SERVICO.justificativa+', '
+      }
+      if(depois.SERVICO.consequencia){
+        log = log+antes.SERVICO.consequencia+'->'+depois.SERVICO.consequencia+', '
+      }
+    }
+
+  }
+  log = log+' Por Kleber'
+
+  console.log(log)
+});
+
+
 
 
 
@@ -145,3 +274,86 @@ exports.solicitacaoImgBase64 = functions.https.onCall(async (data, context) => {
         }
     }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//para fazer upload de grandes planilhas, em teste
+var XLSX = require('xlsx')
+
+var xlsx = require('node-xlsx').default;
+// Or var xlsx = require('node-xlsx').default;
+
+exports.exportaEquipamentos = functions.https.onCall(async (data, context) => {
+    // console.log('context1111111114:', context.rawRequest.ip);
+    // console.log('context1111111333:', context.rawRequest.headers["user-agent"]);
+    console.log('dentro do pagamento saddsad ada', context.auth);
+    if (!context.auth) {
+        throw new functions.https.HttpsError('failed-precondition', 'Você não está autenticado');
+    } else {
+        try {
+            console.log('chegou', data)
+
+
+            var buf = fs.readFileSync('https://firebasestorage.googleapis.com/v0/b/sse-eletromecanica.appspot.com/o/equipamentos%2FEQUIPAMENTOS%20ALMOXARIFADO%20COM%20DATA%20DA%20ULTIMA%20MOVIMENTA%C3%87%C3%83O.xlsx?alt=media&token=26f3f9fb-4d3a-4fee-a2cf-80b431fe9fb6');
+            
+            var wb = XLSX.read(buf, {type:'buffer'});
+
+            console.log('wb teste', wb)
+
+
+            
+            // Parse a buffer
+            const workSheetsFromBuffer = xlsx.parse(fs.readFileSync('https://firebasestorage.googleapis.com/v0/b/sse-eletromecanica.appspot.com/o/equipamentos%2FEQUIPAMENTOS%20ALMOXARIFADO%20COM%20DATA%20DA%20ULTIMA%20MOVIMENTA%C3%87%C3%83O.xlsx?alt=media&token=26f3f9fb-4d3a-4fee-a2cf-80b431fe9fb6'));
+            console.log('workSheetsFromBuffer', workSheetsFromBuffer)
+            // Parse a file
+            const workSheetsFromFile = xlsx.parse( 'https://firebasestorage.googleapis.com/v0/b/sse-eletromecanica.appspot.com/o/equipamentos%2FEQUIPAMENTOS%20ALMOXARIFADO%20COM%20DATA%20DA%20ULTIMA%20MOVIMENTA%C3%87%C3%83O.xlsx?alt=media&token=26f3f9fb-4d3a-4fee-a2cf-80b431fe9fb6');
+            console.log('workSheetsFromFile', workSheetsFromFile)
+               /*  let workBook = null;
+                let jsonData = null;
+                const reader = new FileReader();
+                const file = ev.target.files[0];
+                reader.onload = (event) => {
+                  const data = reader.result;
+                  workBook = XLSX.read(data, { type: 'binary' });
+                  jsonData = workBook.SheetNames.reduce((initial, name) => {
+                    const sheet = workBook.Sheets[name];
+                    initial[name] = XLSX.utils.sheet_to_json(sheet);
+                    return initial;
+                  }, {});
+                  console.log(jsonData);
+                  if(jsonData.Plan1){
+                    console.log(jsonData.Plan1);
+            
+                    this.mgeService.addMges(jsonData.Plan1, this.usuario, this.formMge.value.periodo);
+                    this.planilha = jsonData.RO01;
+                    const dataString = JSON.stringify(jsonData);
+                    // document.getElementById('output').innerHTML = dataString.slice(0, 300).concat("...");
+                  } else {
+                    alert('Nome da planilha precisa ser Plan1')
+                  }
+             */
+   
+              
+
+            return data
+                     
+        } catch (error) {
+            return {cod: 'erro', descricao: 'Erro no salvar cach', error};
+        }
+    }
+});
+

@@ -72,18 +72,19 @@ var _ = require('lodash');
   //https://qastack.com.br/programming/31683075/how-to-do-a-deep-comparison-between-2-objects-with-lodash
   //https://www.npmjs.com/package/lodash
 
- exports.AtualizaRme = functions.firestore.document('/rme/{pushId}').onUpdate((change, context) => {
+exports.AtualizaRme = functions.firestore.document('/rme/{pushId}').onUpdate((change, context) => {
+  // console.log(change)
+  //console.log(change.before)
+  var RMEbefore = change.before.data()
+  var RMEafter = change.after.data()
+  
+  //console.log('depois: ', RMEafter)
+  //console.log('separando ooooooooooooooo: ', RMEafter.SERVICO)
+  console.log('usuario ', context)
+  console.log('usuario2 ', context.usuario)
 
-    var RMEbefore = change.before.data()
-    var RMEafter = change.after.data()
-    var userAutenticado = context.aut
 
-    console.log('depois: ', RMEafter)
-    console.log('separando ooooooooooooooo: ', RMEafter.SERVICO)
-    console.log('usuario ', userAutenticado)
-
-
-   let differences = function (newObj, oldObj) {
+  let differences = function (newObj, oldObj) {
         return _.reduce(newObj, function (result, value, key) {
         if (!_.isEqual(value, oldObj[key])) {
             //console.log(value, Array.isArray(value))
@@ -107,93 +108,115 @@ var _ = require('lodash');
         }
         return result
         }, {})
-    }
+  }
 
 
 
     //  console.log(antes.chave1.prop1_3, depois.chave1.prop1_3)
   var antes = differences(RMEbefore, RMEafter);
   var depois = differences(RMEafter, RMEbefore);
-  console.log('antes', antes);
+// console.log('antes', antes);
   console.log('depois', depois);
+  if(depois.log){
+    console.log(depois.log)
+  } else {
+  
+      var log = 'Alterado: '
 
-  var log = 'Alterado: '
-
-  if(depois.solicitante){
-    log = log+antes.solicitante+'->'+depois.solicitante+', '
-  }
-  if(depois.status){
-    log = log+antes.status+'->'+depois.status+', '
-  }
-  if(depois.OSE){
-    if(antes.OSE.localidade){
-      log = log+antes.OSE.localidade+'->'+depois.OSE.localidade+', '
-    }
-    if(depois.OSE.unidade){
-      log = log+antes.OSE.unidade+'->'+depois.OSE.unidade+', '
-    }
-    if(depois.OSE.ponto){
-      log = log+antes.OSE.ponto+'->'+depois.OSE.ponto+', '
-    }
-  }
-  if(depois.EQUIPAMENTO){
-    if(depois.EQUIPAMENTO.descricao){
-      log = log+antes.EQUIPAMENTO.descricao+'->'+depois.EQUIPAMENTO.descricao+', '
-    }
-    if(depois.EQUIPAMENTO.identificacao){
-      log = log+antes.EQUIPAMENTO.identificacao+'->'+depois.EQUIPAMENTO.identificacao+', '
-    }
-  }
-  if(depois.SERVICO){
-    if(depois.SERVICO.justificativa){
-      log = log+antes.SERVICO.justificativa+'->'+depois.SERVICO.justificativa+', '
-    }
-    if(depois.SERVICO.consequencia){
-      log = log+antes.SERVICO.consequencia+'->'+depois.SERVICO.consequencia+', '
-    }
-  }
-  if(depois.MATERIAL){
-    if(Array.isArray(depois.MATERIAL)){
-      log = log+' Materiais: '
-      depois.MATERIAL.forEach(v => {
-        if(v.cod){
-          log= log+v.cod+'-'
-        }
-        if(v.descricao){
-          log= log+v.descricao+'-'
-        }
-        if(v.categoria){
-          log= log+v.categoria+'-'
-        }
-        if(v.requisitado){
-          log= log+v.requisitado+'-'
-        }
-        if(v.comprado){
-          log= log+v.comprado+'-'
-        }
-        if(v.devolvido){
-          log= log+v.aplicado+'-'
-        }
-        if(v.uf){
-          log= log+v.uf+'-'
-        }
-
-        log = log+' | '
-      })
-    }
-    if(depois.SERVICO){
-      if(depois.SERVICO.justificativa){
-        log = log+antes.SERVICO.justificativa+'->'+depois.SERVICO.justificativa+', '
+      if(depois.solicitante){
+        log = log+antes.solicitante+'->'+depois.solicitante+', '
       }
-      if(depois.SERVICO.consequencia){
-        log = log+antes.SERVICO.consequencia+'->'+depois.SERVICO.consequencia+', '
+      if(depois.status){
+        log = log+antes.status+'->'+depois.status+', '
       }
-    }
+      if(depois.OSE){
+        if(depois.OSE.localidade){
+          log = log+antes.OSE.localidade+'->'+depois.OSE.localidade+', '
+        }
+        if(depois.OSE.OS_CODIGO){
+          log = log+antes.OSE.OS_CODIGO+'->'+depois.OSE.OS_CODIGO+', '
+        }
+        if(depois.OSE.unidade){
+          log = log+antes.OSE.unidade+'->'+depois.OSE.unidade+', '
+        }
+        if(depois.OSE.ponto){
+          log = log+antes.OSE.ponto+'->'+depois.OSE.ponto+', '
+        }
+      }
+      if(depois.EQUIPAMENTO){
+        if(depois.EQUIPAMENTO.descricao){
+          log = log+antes.EQUIPAMENTO.descricao+'->'+depois.EQUIPAMENTO.descricao+', '
+        }
+        if(depois.EQUIPAMENTO.identificacao){
+          log = log+antes.EQUIPAMENTO.identificacao+'->'+depois.EQUIPAMENTO.identificacao+', '
+        }
+      }
+      if(depois.SERVICO){
+        if(depois.SERVICO.justificativa){
+          log = log+antes.SERVICO.justificativa+'->'+depois.SERVICO.justificativa+', '
+        }
+        if(depois.SERVICO.consequencia){
+          log = log+antes.SERVICO.consequencia+'->'+depois.SERVICO.consequencia+', '
+        }
+      }
+      if(depois.MATERIAL){
+        if(Array.isArray(depois.MATERIAL)){
+          log = log+' Materiais: '
+          depois.MATERIAL.forEach(v => {
+            if(v.cod){
+              log= log+v.cod+'-'
+            }
+            if(v.descricao){
+              log= log+v.descricao+'-'
+            }
+            if(v.categoria){
+              log= log+v.categoria+'-'
+            }
+            if(v.requisitado){
+              log= log+v.requisitado+'-'
+            }
+            if(v.comprado){
+              log= log+v.comprado+'-'
+            }
+            if(v.devolvido){
+              log= log+v.aplicado+'-'
+            }
+            if(v.uf){
+              log= log+v.uf+'-'
+            }
 
+            log = log+' | '
+          })
+        }
+        if(depois.SERVICO){
+          if(depois.SERVICO.justificativa){
+            log = log+antes.SERVICO.justificativa+'->'+depois.SERVICO.justificativa+', '
+          }
+          if(depois.SERVICO.consequencia){
+            log = log+antes.SERVICO.consequencia+'->'+depois.SERVICO.consequencia+', '
+          }
+        }
+
+      }
+      if(depois.usuario){
+          log = log+' Por '+depois.usuario.nome
+      } 
+
+      console.log(log)
+
+      const FieldValue = admin.firestore.FieldValue;
+      console.log(FieldValue.serverTimestamp())
+      //db.collection('rme').doc('amHwmuly3ndW4JHdZ2dH').update({"status" : status, "log_aceito" : date});
+    
+      db.collection('rme').doc(context.params.pushId).update({
+          "log" : admin.firestore.FieldValue.arrayUnion({"createdAt": context.timestamp, "descricao": log})
+      });
   }
-  log = log+' Por Kleber'
 
-  console.log(log)
+
+
+
+
 });
 
 
@@ -205,7 +228,7 @@ var _ = require('lodash');
 // função chamada para buscar no bd as imagens e baixar como Base64 para utilizar no pdfMaker
 
 const imageToBase64 = require('image-to-base64');
-const { Console } = require('console');
+const { Console, timeStamp } = require('console');
 
 exports.solicitacaoImgBase64 = functions.https.onCall(async (data, context) => {
     // console.log('context1111111114:', context.rawRequest.ip);

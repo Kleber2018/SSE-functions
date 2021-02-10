@@ -80,8 +80,8 @@ exports.AtualizaRme = functions.firestore.document('/rme/{pushId}').onUpdate((ch
   
   //console.log('depois: ', RMEafter)
   //console.log('separando ooooooooooooooo: ', RMEafter.SERVICO)
-  console.log('usuario ', context)
-  console.log('usuario2 ', context.usuario)
+  //console.log('usuario ', context)
+  //console.log('usuario2 ', context.usuario)
 
 
   let differences = function (newObj, oldObj) {
@@ -110,18 +110,18 @@ exports.AtualizaRme = functions.firestore.document('/rme/{pushId}').onUpdate((ch
         }, {})
   }
 
-
-
     //  console.log(antes.chave1.prop1_3, depois.chave1.prop1_3)
   var antes = differences(RMEbefore, RMEafter);
   var depois = differences(RMEafter, RMEbefore);
-// console.log('antes', antes);
-  console.log('depois', depois);
+  // console.log('antes', antes);
+  //console.log('depois', depois);
   if(depois.log){
+    //para não gerar um loop de atualização de log
     console.log(depois.log)
   } else {
-  
-      var log = 'Alterado: '
+      const inicializandoLog = 'Alterado: '
+
+      var log = inicializandoLog
 
       if(depois.solicitante){
         log = log+antes.solicitante+'->'+depois.solicitante+', '
@@ -198,25 +198,19 @@ exports.AtualizaRme = functions.firestore.document('/rme/{pushId}').onUpdate((ch
         }
 
       }
-      if(depois.usuario){
-          log = log+' Por '+depois.usuario.nome
-      } 
 
-      console.log(log)
+      if(inicializandoLog !== log){ // para quando acontece o update sem alteração
+        if(RMEafter.updatedUser){
+          log = log+' Por '+RMEafter.updatedUser
+        } 
+        //db.collection('rme').doc('amHwmuly3ndW4JHdZ2dH').update({"status" : status, "log_aceito" : date});
+      
+        db.collection('rme').doc(context.params.pushId).update({
+            "log" : admin.firestore.FieldValue.arrayUnion({"createdAt": context.timestamp, "descricao": log})
+        });
+      }
 
-      const FieldValue = admin.firestore.FieldValue;
-      console.log(FieldValue.serverTimestamp())
-      //db.collection('rme').doc('amHwmuly3ndW4JHdZ2dH').update({"status" : status, "log_aceito" : date});
-    
-      db.collection('rme').doc(context.params.pushId).update({
-          "log" : admin.firestore.FieldValue.arrayUnion({"createdAt": context.timestamp, "descricao": log})
-      });
   }
-
-
-
-
-
 });
 
 

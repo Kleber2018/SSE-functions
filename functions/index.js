@@ -296,6 +296,134 @@ exports.solicitacaoImgBase64 = functions.https.onCall(async (data, context) => {
 
 
 
+exports.mgeAnalise = functions.https.onCall(async (data, context) => {
+ // console.log('usuário autenticado', context.auth);
+  if (!context.auth) {
+      throw new functions.https.HttpsError('failed-precondition', 'Você não está autenticado');
+  } else {
+    try {
+      console.log('chegou', data)
+/*
+      var mge =  await db.collection('mge').where('OSE.loc', '==', 'VYG1').get().then(doc => {
+        if (!doc.exists) {
+        console.log('No such documentSSSSSSSSSSSSS!');
+        return null
+        } else {
+          console.log('doccccccc', doc.data())
+        return doc.data();
+        }
+    })
+    .catch(err => {
+        console.log('Error getting document', err);
+    });  
+      console.log('mges RETORNOWWWWWWWWW:',mge)
+*/
+      var mgesSnapshot =  await db.collection('mge').where('OSE.loc', '==', 'VYG1').get()
+      if (mgesSnapshot.empty) {
+        console.log('No MGE matching documents.');
+        return;
+      }  
+    
+      var mges = []
+      mgesSnapshot.forEach(doc => {
+        mges.push(doc.data())
+        //console.log('LOOOOOOOP:', doc.id, '=>', doc.data());
+      });
+
+      return {mges: mgesSnapshot}; //precisa corrigir o retorno
+      /*
+      console.log('mges RETORNO:',mges)
+      var correntes = [[],[],[],[],[],[],[],[]];
+      var tensoes = [[],[],[],[],[],[],[]];
+      var periodo = []
+      var horimetros = [[],[],[],[],[],[],[],[]];
+    
+  
+      var qtdCMBCorrente = 1
+      var qtdCMBHorimetro = 1
+        
+      mges.forEach(element => {
+        if(element.MGE){
+          if(element.MGE.equipamentos){
+            for (let index = 0; index < 6; index++) {     
+  
+              //corrente    
+              if(element.MGE.equipamentos[index]){
+  
+  
+  
+                if(element.MGE.equipamentos[index].a){
+                  const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
+                  if(element.MGE.equipamentos[index].a !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
+                    qtdCMBCorrente = parseInt(cmbNum[1]); 
+                  }
+                  correntes[index].push(element.MGE.equipamentos[index].a)
+                } else if(element.MGE.equipamentos[index].corrente){
+                  const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
+                  if(element.MGE.equipamentos[index].corrente !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
+                    qtdCMBCorrente = parseInt(cmbNum[1]); 
+                  }
+                  correntes[index].push(element.MGE.equipamentos[index].corrente)
+                } else {
+                  correntes[index].push(null)
+                }
+              } else {
+                correntes[index].push(null)
+              }
+  
+  
+              //horimetro
+              if(element.MGE.equipamentos[index]){
+                if(element.MGE.equipamentos[index].horimetro){
+                  const cmbHorimetroNum = element.MGE.equipamentos[index].ordem.split("-", 2)
+                  if(element.MGE.equipamentos[index].horimetro !== null && (parseInt(cmbHorimetroNum[1]) > qtdCMBHorimetro)){
+                    qtdCMBHorimetro = parseInt(cmbHorimetroNum[1]); 
+                  }
+                  horimetros[index].push(element.MGE.equipamentos[index].horimetro)
+                } else {
+                  horimetros[index].push(0)
+                }
+              } else {
+                horimetros[index].push(0)
+              }
+            }
+          }
+        }
+  
+  
+        var dataLocalInic = new Date(element.OSE.data_execucao.seconds*1000);
+        var dia = dataLocalInic.getDate();
+        var mes = dataLocalInic.getMonth();
+        var ano = dataLocalInic.getFullYear();
+        lineChartLabels.push(dia+'/'+(mes+1)+'/'+ano)
+      });
+  
+  
+  
+  
+      horimetros.splice(qtdCMBHorimetro, 8-qtdCMBHorimetro)//remover os arrays que não possuem medição
+  
+      correntes.splice(qtdCMBCorrente, 8-qtdCMBCorrente)
+      console.log('horimetros', qtdCMBHorimetro, horimetros);
+  
+      console.log('corrente', qtdCMBCorrente, correntes)
+      console.log('linecharts',  lineChartLabels)
+      
+      return {
+        qtdCMBHorimetro: qtdCMBHorimetro,
+        qtdCMBCorrente: qtdCMBCorrente,
+        horimetros: horimetros,
+        correntes: correntes,
+        datas: lineChartLabels
+      } 
+      */
+    } catch (error) {
+      return {cod: 'erro', descricao: error};
+    } 
+
+  }
+})
+
 
 
 

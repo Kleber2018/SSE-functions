@@ -340,72 +340,106 @@ exports.mgesAnalise = functions.https.onCall(async (data, context) => {
 
       var correntes = [[],[],[],[],[],[],[],[]];
       var horimetros = [[],[],[],[],[],[],[],[]];
-      var oses = [];
+      var osesHorimetro = [];
+      var osesCorrente = [];
+      var datasHorimetro = []
       var datas = []
+      var datasCorrente = []
   
       var qtdCMBCorrente = 1
       var qtdCMBHorimetro = 1
       mges.forEach(function(element) {
         if(element.MGE){
           if(element.MGE.equipamentos){
-            for (let index = 0; index < 6; index++) {     
-              if(element.MGE.equipamentos[index]){
-                //corrente 
-                if(element.MGE.equipamentos[index].a){
-                  const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
-                  if(element.MGE.equipamentos[index].a !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
-                    qtdCMBCorrente = parseInt(cmbNum[1]); 
+
+
+             // essa parte está funcionando más está repetindo a data várias vezes no final
+             var dataLocalInic = new Date(element.OSE.data_execucao.seconds*1000);
+             var dia = dataLocalInic.getDate();
+             var mes = dataLocalInic.getMonth();
+             var ano = dataLocalInic.getFullYear();           
+
+            if((dia+'/'+(mes+1)+'/'+ano) !== datas[(datas.length-1)]){ //para não utilizar oses do mesmo dia
+              var somaCorrente = 0
+              var somaHorimetro = 0
+              for (let index = 0; index < 6; index++) {     
+                if(element.MGE.equipamentos[index]){
+                  //corrente 
+                  if(element.MGE.equipamentos[index].a){
+                    const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
+                    if(element.MGE.equipamentos[index].a !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
+                      qtdCMBCorrente = parseInt(cmbNum[1]); 
+                    }
+
+                    correntes[index].push(element.MGE.equipamentos[index].a)
+                    somaCorrente = somaCorrente + element.MGE.equipamentos[index].a
+                  } else if(element.MGE.equipamentos[index].corrente){
+                    const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
+                    if(element.MGE.equipamentos[index].corrente !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
+                      qtdCMBCorrente = parseInt(cmbNum[1]); 
+                    }
+                    correntes[index].push(element.MGE.equipamentos[index].corrente)
+                    somaCorrente = somaCorrente + element.MGE.equipamentos[index].corrente
+                  } else {
+                    correntes[index].push(null)
                   }
-                  correntes[index].push(element.MGE.equipamentos[index].a)
-                } else if(element.MGE.equipamentos[index].corrente){
-                  const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
-                  if(element.MGE.equipamentos[index].corrente !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
-                    qtdCMBCorrente = parseInt(cmbNum[1]); 
+
+                  //horimetro
+                  if(element.MGE.equipamentos[index].horimetro){
+                    const cmbHorimetroNum = element.MGE.equipamentos[index].ordem.split("-", 2)
+                    if(element.MGE.equipamentos[index].horimetro !== null && (parseInt(cmbHorimetroNum[1]) > qtdCMBHorimetro)){
+                      qtdCMBHorimetro = parseInt(cmbHorimetroNum[1]); 
+                    }
+                    horimetros[index].push(element.MGE.equipamentos[index].horimetro)
+                    somaHorimetro = somaHorimetro + element.MGE.equipamentos[index].horimetro
+                  } else {
+                    horimetros[index].push(0)
                   }
-                  correntes[index].push(element.MGE.equipamentos[index].corrente)
                 } else {
                   correntes[index].push(null)
-                }
-
-                //horimetro
-                if(element.MGE.equipamentos[index].horimetro){
-                  const cmbHorimetroNum = element.MGE.equipamentos[index].ordem.split("-", 2)
-                  if(element.MGE.equipamentos[index].horimetro !== null && (parseInt(cmbHorimetroNum[1]) > qtdCMBHorimetro)){
-                    qtdCMBHorimetro = parseInt(cmbHorimetroNum[1]); 
-                  }
-                  horimetros[index].push(element.MGE.equipamentos[index].horimetro)
-                } else {
                   horimetros[index].push(0)
                 }
-              } else {
-                correntes[index].push(null)
-                horimetros[index].push(0)
+
               }
 
+              datas.push(dia+'/'+(mes+1)+'/'+ano)
+
+              //para remover oses sem medições
+              console.log('somacorrente---', somaCorrente)
+              if(somaCorrente !== 0) {
+                datasCorrente.push(dia+'/'+(mes+1)+'/'+ano)
+                osesCorrente.push(element.OSE.ose)
+                
+              } else {
+                for (let index = 0; index < 6; index++) {
+                  correntes[index].pop()
+                }
+              }              
+              //para remover oses sem horimetro
+              if(somaHorimetro !== 0) {
+                datasHorimetro.push(dia+'/'+(mes+1)+'/'+ano)
+                osesHorimetro.push(element.OSE.ose)
+              } else {
+                for (let index = 0; index < 6; index++) {
+                  horimetros[index].pop()
+                }
+              }
             }
-            // essa parte está funcionando más está repetindo a data várias vezes no final
-            var dataLocalInic = new Date(element.OSE.data_execucao.seconds*1000);
-            var dia = dataLocalInic.getDate();
-            var mes = dataLocalInic.getMonth();
-            var ano = dataLocalInic.getFullYear();
-            datas.push(dia+'/'+(mes+1)+'/'+ano)
-            oses.push(element.OSE.ose)
           }
-        }
- 
-        
+        }  
       });
    
       horimetros.splice(qtdCMBHorimetro, 8-qtdCMBHorimetro)//remover os arrays que não possuem medição
       correntes.splice(qtdCMBCorrente, 8-qtdCMBCorrente)
-
       return {
         qtdCMBHorimetro: qtdCMBHorimetro,
         qtdCMBCorrente: qtdCMBCorrente,
         horimetros: horimetros,
         correntes: correntes,
-        datas: datas,
-        oses: oses
+        datasHorimetro: datasHorimetro,
+        osesHorimetro: osesHorimetro,
+        osesCorrente: osesCorrente,
+        datasCorrente: datasCorrente
       } 
 
     } catch (error) {

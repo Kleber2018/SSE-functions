@@ -296,7 +296,7 @@ exports.solicitacaoImgBase64 = functions.https.onCall(async (data, context) => {
 
 
 
-exports.mgeAnalise = functions.https.onCall(async (data, context) => {
+exports.mgesAnalise = functions.https.onCall(async (data, context) => {
  // console.log('usuário autenticado', context.auth);
   if (!context.auth) {
       throw new functions.https.HttpsError('failed-precondition', 'Você não está autenticado');
@@ -318,39 +318,51 @@ exports.mgeAnalise = functions.https.onCall(async (data, context) => {
     });  
       console.log('mges RETORNOWWWWWWWWW:',mge)
 */
-      var mgesSnapshot =  await db.collection('mge').where('OSE.loc', '==', 'VYG1').get()
-      if (mgesSnapshot.empty) {
-        console.log('No MGE matching documents.');
-        return;
-      }  
-    
-      var mges = []
-      mgesSnapshot.forEach(doc => {
-        mges.push(doc.data())
-        //console.log('LOOOOOOOP:', doc.id, '=>', doc.data());
+      var mges =  await db.collection('mge').where('OSE.loc', '==', 'VYG1').where('status', '==', '7-executada').get().then(querySnapshot =>{
+        var mgesSnapshot = []
+        if(querySnapshot){
+          querySnapshot.forEach(function(doc) {
+            //console.log(doc.id, " => ", doc.data());
+            mgesSnapshot.push(doc.data())
+          })
+        }
+       // console.log( 'retornouuu', mgesSnapshot)
+        return mgesSnapshot
+      }).catch(err => {
+          console.log('Error getting document', err);
       });
 
-      return {mges: mgesSnapshot}; //precisa corrigir o retorno
-      /*
-      console.log('mges RETORNO:',mges)
+/*
+      if (mgesSnapshot.empty) {
+        console.log('No MGE matching documents.');
+      }  
+      */
+      //console.log('retornouuuu ', mges)
+    
+
+      //return {mges: mgesSnapshot}; //precisa corrigir o retorno
+
+      //console.log('mges RETORNO:',mges)
       var correntes = [[],[],[],[],[],[],[],[]];
-      var tensoes = [[],[],[],[],[],[],[]];
-      var periodo = []
       var horimetros = [[],[],[],[],[],[],[],[]];
+            var horimetros = [[],[],[],[],[],[],[],[]];
+      var datas = []
     
   
       var qtdCMBCorrente = 1
       var qtdCMBHorimetro = 1
+        console.log('21',)
+      mges.forEach(function(element) {
+
+       // console.log('equipamentos element', element.MGE.equipamentos)
+       
         
-      mges.forEach(element => {
         if(element.MGE){
           if(element.MGE.equipamentos){
             for (let index = 0; index < 6; index++) {     
   
               //corrente    
               if(element.MGE.equipamentos[index]){
-  
-  
   
                 if(element.MGE.equipamentos[index].a){
                   const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
@@ -389,36 +401,40 @@ exports.mgeAnalise = functions.https.onCall(async (data, context) => {
             }
           }
         }
-  
-  
+ 
+ console.log('26')
+
+ // essa parte está funcionando más está repetindo a data várias vezes no final
         var dataLocalInic = new Date(element.OSE.data_execucao.seconds*1000);
         var dia = dataLocalInic.getDate();
         var mes = dataLocalInic.getMonth();
         var ano = dataLocalInic.getFullYear();
-        lineChartLabels.push(dia+'/'+(mes+1)+'/'+ano)
+        datas.push(dia+'/'+(mes+1)+'/'+ano)
+       
       });
   
   
+      console.log('27')
   
+    //  horimetros.splice(qtdCMBHorimetro, 8-qtdCMBHorimetro)//remover os arrays que não possuem medição
   
-      horimetros.splice(qtdCMBHorimetro, 8-qtdCMBHorimetro)//remover os arrays que não possuem medição
-  
-      correntes.splice(qtdCMBCorrente, 8-qtdCMBCorrente)
+    //  correntes.splice(qtdCMBCorrente, 8-qtdCMBCorrente)
       console.log('horimetros', qtdCMBHorimetro, horimetros);
   
       console.log('corrente', qtdCMBCorrente, correntes)
-      console.log('linecharts',  lineChartLabels)
-      
+      console.log('linecharts',  datas)
+      //return {mges: mges, datas: datas}
       return {
         qtdCMBHorimetro: qtdCMBHorimetro,
         qtdCMBCorrente: qtdCMBCorrente,
         horimetros: horimetros,
         correntes: correntes,
-        datas: lineChartLabels
+        datas: datas
       } 
-      */
+
     } catch (error) {
-      return {cod: 'erro', descricao: error};
+      console.log(error)
+      return {cod: 'erro2', descricao: error};
     } 
 
   }

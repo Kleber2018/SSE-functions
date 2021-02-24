@@ -318,7 +318,7 @@ exports.mgesAnalise = functions.https.onCall(async (data, context) => {
     });  
       console.log('mges RETORNOWWWWWWWWW:',mge)
 */
-      var mges =  await db.collection('mge').where('OSE.loc', '==', 'VYG1').where('status', '==', '7-executada').get().then(querySnapshot =>{
+      var mges =  await db.collection('mge').where('OSE.loc', '==', data).where('status', '==', '7-executada').get().then(querySnapshot =>{
         var mgesSnapshot = []
         if(querySnapshot){
           querySnapshot.forEach(function(doc) {
@@ -326,7 +326,6 @@ exports.mgesAnalise = functions.https.onCall(async (data, context) => {
             mgesSnapshot.push(doc.data())
           })
         }
-       // console.log( 'retornouuu', mgesSnapshot)
         return mgesSnapshot
       }).catch(err => {
           console.log('Error getting document', err);
@@ -336,34 +335,22 @@ exports.mgesAnalise = functions.https.onCall(async (data, context) => {
       if (mgesSnapshot.empty) {
         console.log('No MGE matching documents.');
       }  
-      */
-      //console.log('retornouuuu ', mges)
-    
+*/
 
-      //return {mges: mgesSnapshot}; //precisa corrigir o retorno
 
-      //console.log('mges RETORNO:',mges)
       var correntes = [[],[],[],[],[],[],[],[]];
       var horimetros = [[],[],[],[],[],[],[],[]];
-            var horimetros = [[],[],[],[],[],[],[],[]];
+      var oses = [];
       var datas = []
-    
   
       var qtdCMBCorrente = 1
       var qtdCMBHorimetro = 1
-        console.log('21',)
       mges.forEach(function(element) {
-
-       // console.log('equipamentos element', element.MGE.equipamentos)
-       
-        
         if(element.MGE){
           if(element.MGE.equipamentos){
             for (let index = 0; index < 6; index++) {     
-  
-              //corrente    
               if(element.MGE.equipamentos[index]){
-  
+                //corrente 
                 if(element.MGE.equipamentos[index].a){
                   const cmbNum = element.MGE.equipamentos[index].ordem.split("-", 2)
                   if(element.MGE.equipamentos[index].a !== null && (parseInt(cmbNum[1]) > qtdCMBCorrente)){
@@ -379,13 +366,8 @@ exports.mgesAnalise = functions.https.onCall(async (data, context) => {
                 } else {
                   correntes[index].push(null)
                 }
-              } else {
-                correntes[index].push(null)
-              }
-  
-  
-              //horimetro
-              if(element.MGE.equipamentos[index]){
+
+                //horimetro
                 if(element.MGE.equipamentos[index].horimetro){
                   const cmbHorimetroNum = element.MGE.equipamentos[index].ordem.split("-", 2)
                   if(element.MGE.equipamentos[index].horimetro !== null && (parseInt(cmbHorimetroNum[1]) > qtdCMBHorimetro)){
@@ -396,40 +378,34 @@ exports.mgesAnalise = functions.https.onCall(async (data, context) => {
                   horimetros[index].push(0)
                 }
               } else {
+                correntes[index].push(null)
                 horimetros[index].push(0)
               }
+
             }
+            // essa parte está funcionando más está repetindo a data várias vezes no final
+            var dataLocalInic = new Date(element.OSE.data_execucao.seconds*1000);
+            var dia = dataLocalInic.getDate();
+            var mes = dataLocalInic.getMonth();
+            var ano = dataLocalInic.getFullYear();
+            datas.push(dia+'/'+(mes+1)+'/'+ano)
+            oses.push(element.OSE.ose)
           }
         }
  
- console.log('26')
-
- // essa parte está funcionando más está repetindo a data várias vezes no final
-        var dataLocalInic = new Date(element.OSE.data_execucao.seconds*1000);
-        var dia = dataLocalInic.getDate();
-        var mes = dataLocalInic.getMonth();
-        var ano = dataLocalInic.getFullYear();
-        datas.push(dia+'/'+(mes+1)+'/'+ano)
-       
+        
       });
-  
-  
-      console.log('27')
-  
-    //  horimetros.splice(qtdCMBHorimetro, 8-qtdCMBHorimetro)//remover os arrays que não possuem medição
-  
-    //  correntes.splice(qtdCMBCorrente, 8-qtdCMBCorrente)
-      console.log('horimetros', qtdCMBHorimetro, horimetros);
-  
-      console.log('corrente', qtdCMBCorrente, correntes)
-      console.log('linecharts',  datas)
-      //return {mges: mges, datas: datas}
+   
+      horimetros.splice(qtdCMBHorimetro, 8-qtdCMBHorimetro)//remover os arrays que não possuem medição
+      correntes.splice(qtdCMBCorrente, 8-qtdCMBCorrente)
+
       return {
         qtdCMBHorimetro: qtdCMBHorimetro,
         qtdCMBCorrente: qtdCMBCorrente,
         horimetros: horimetros,
         correntes: correntes,
-        datas: datas
+        datas: datas,
+        oses: oses
       } 
 
     } catch (error) {
